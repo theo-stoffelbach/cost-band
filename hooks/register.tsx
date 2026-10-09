@@ -49,6 +49,13 @@ const levelColor = (pct: number | null) => {
   return 'success'
 }
 
+// 45200 → « 45.2k », 1250000 → « 1.25M »
+const formatTokens = (tokens: number) => {
+  if (tokens >= 1_000_000) return `${Math.round(tokens / 10_000) / 100}M`
+  if (tokens >= 1_000) return `${Math.round(tokens / 100) / 10}k`
+  return String(tokens)
+}
+
 const formatDuration = (ms: number) => {
   const total = Math.max(0, Math.floor(ms / 1000))
   const h = Math.floor(total / 3600)
@@ -134,6 +141,8 @@ export const register: Register = on => {
 
     const lastP = await read($, lastPct)
     const hasLimits = usage.rateLimits.length > 0
+    // Tokens occupés par la conversation dans la fenêtre de contexte
+    const tokens = usage.context?.tokens
     const fiveHour = remaining(usage, 'five_hour')
     const week = remaining(usage, 'seven_day')
 
@@ -176,6 +185,7 @@ export const register: Register = on => {
           {hasLimits && dim(' | ')}
           {hasLimits && limit(week)}
           {hasLimits && dim(')')}
+          {tokens !== undefined && dim(` ${formatTokens(tokens)} tokens`)}
         </Box>
       </Box>
     )
