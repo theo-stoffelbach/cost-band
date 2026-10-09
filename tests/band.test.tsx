@@ -22,7 +22,7 @@ for (const surface of ['terminal', 'desktop'] as const) {
     const texts = await ui.findAll({ type: 'Text' })
     const colorOf = (text: string) => texts.find(t => t.text === text)?.props.color
 
-    expect(texts.map(t => t.text).join('')).toBe('$0.042 / $1.50 (1.2%/8.5%)2m05s | 1h02m05s (70% | 44.5%) 45.2k tokens')
+    expect(texts.map(t => t.text).join('')).toBe('$0.042 / $1.50 (1.2%/8.5%) 45.2k tokens2m05s | 1h02m05s (70% | 44.5%)')
     expect(colorOf('70%')).toBe('success')
     expect(colorOf('44.5%')).toBe('warning')
     // $1.50 et 2m05s restent neutres, 1h02m05s d'ouverture aussi (seuil à 2 h)

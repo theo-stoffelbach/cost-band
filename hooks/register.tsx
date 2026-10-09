@@ -174,6 +174,7 @@ export const register: Register = on => {
               <Text color="subtle">{formatPct(await read($, sessionPct))}</Text>
             )}
             {fiveHourPct(usage) !== null && dim(')')}
+            {tokens !== undefined && dim(` ${formatTokens(tokens)} tokens`)}
           </Box>
         )}
         <Box flexDirection="row">
@@ -185,7 +186,6 @@ export const register: Register = on => {
           {hasLimits && dim(' | ')}
           {hasLimits && limit(week)}
           {hasLimits && dim(')')}
-          {tokens !== undefined && dim(` ${formatTokens(tokens)} tokens`)}
         </Box>
       </Box>
     )
