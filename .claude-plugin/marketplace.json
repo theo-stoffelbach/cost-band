@@ -1,0 +1,7 @@
+{
+  "name": "theos-mods",
+  "owner": { "name": "theos" },
+  "plugins": [
+    { "name": "cost-band", "source": "./", "description": "Bande au-dessus du prompt : coûts, limites restantes et durées" }
+  ]
+}

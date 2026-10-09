@@ -1,0 +1,6 @@
+{
+  "name": "cost-band",
+  "version": "0.1.0",
+  "description": "Bande au-dessus du prompt : coût du dernier message / de la session, temps de travail de Claude | durée d'ouverture",
+  "types": "./types/index.d.ts"
+}
