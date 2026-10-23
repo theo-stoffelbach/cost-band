@@ -56,6 +56,39 @@ const formatTokens = (tokens: number) => {
   return String(tokens)
 }
 
+// Le panneau qu'ouvre un clic sur le % du contexte : le détail, comme /context
+const CONTEXT_PANE = 'cost-band-contexte'
+
+// Arc du rond de contexte : bleu, orange à partir de 50 %, rouge à partir de 80 %
+const ringColor = (pct: number) => {
+  if (pct >= 80) return '#e5534b'
+  if (pct >= 50) return '#d29922'
+  return '#4a9eff'
+}
+
+// Le rond de contexte en SVG ; l'app le dessine comme une image, d'où les couleurs en dur
+const ring = (pct: number) => {
+  const r = 5
+  const length = 2 * Math.PI * r
+  const arc = (Math.min(100, Math.max(0, pct)) / 100) * length
+
+  return (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width="12" height="12">' +
+    `<circle cx="6" cy="6" r="${r}" fill="none" stroke="#8b8b8b" stroke-opacity="0.35" stroke-width="2"/>` +
+    `<circle cx="6" cy="6" r="${r}" fill="none" stroke="${ringColor(pct)}" stroke-width="2" ` +
+    `stroke-dasharray="${arc.toFixed(2)} ${length.toFixed(2)}" transform="rotate(-90 6 6)"/></svg>`
+  )
+}
+
+// Le même rond en un caractère, pour le terminal qui ne dessine pas de SVG
+const ringGlyph = (pct: number) => {
+  if (pct >= 88) return '●'
+  if (pct >= 63) return '◕'
+  if (pct >= 38) return '◑'
+  if (pct >= 13) return '◔'
+  return '○'
+}
+
 const formatDuration = (ms: number) => {
   const total = Math.max(0, Math.floor(ms / 1000))
   const h = Math.floor(total / 3600)
@@ -143,10 +176,16 @@ export const register: Register = on => {
     const hasLimits = usage.rateLimits.length > 0
     // Tokens occupés par la conversation dans la fenêtre de contexte
     const tokens = usage.context?.tokens
+    // Part de la fenêtre de contexte qu'ils occupent (%, entier), comme le `ctx` de la barre d'état
+    const contextPct = usage.context?.percent
     const fiveHour = remaining(usage, 'five_hour')
     const week = remaining(usage, 'seven_day')
 
-    const { Box, Text } = $.ui.resolve(e)
+    const elements = $.ui.resolve(e)
+    const { Box, Text, Button } = elements
+    // Le terminal n'a pas de SVG : il dessine le rond en un caractère dans le bouton
+    const Svg = e.surface !== 'terminal' && 'Svg' in elements ? elements.Svg : undefined
+    const openContext = () => void $.ui.open({ id: CONTEXT_PANE, title: 'Contexte' })
 
     // Séparateurs et parenthèses en atténué, valeurs en couleurs du thème
     const dim = (text: string) => <Text dimColor>{text}</Text>
@@ -175,6 +214,19 @@ export const register: Register = on => {
             )}
             {fiveHourPct(usage) !== null && dim(')')}
             {tokens !== undefined && dim(` ${formatTokens(tokens)} tokens`)}
+            {contextPct !== undefined && dim(' · ')}
+            {contextPct !== undefined && Svg !== undefined && (
+              <Svg source={ring(contextPct)} alt={`Contexte ${contextPct} %`} width={12} height={12} />
+            )}
+            {contextPct !== undefined && (
+              <Button
+                key="contexte"
+                plain
+                dimColor
+                label={Svg === undefined ? `${ringGlyph(contextPct)} ${contextPct}%` : `${contextPct}%`}
+                onPress={openContext}
+              />
+            )}
           </Box>
         )}
         <Box flexDirection="row">
@@ -187,6 +239,30 @@ export const register: Register = on => {
           {hasLimits && limit(week)}
           {hasLimits && dim(')')}
         </Box>
+      </Box>
+    )
+  })
+
+  // Le détail du contexte par catégorie, estimé sur place (aucune requête), comme /context
+  on('ui.render', { component: 'Pane', requestId: CONTEXT_PANE }, async ($, e) => {
+    const { Box, Text } = $.ui.resolve(e)
+    const detail = (await $.session.usage({ breakdown: 'summary' })).context?.breakdown
+
+    if (detail === undefined) return <Text dimColor>Contexte indisponible</Text>
+
+    const rows = detail.categories.filter(row => !row.isDeferred && row.tokens > 0)
+
+    return (
+      <Box flexDirection="column" width={e.props.bodyColumns}>
+        <Text>
+          {formatTokens(detail.totalTokens)} / {formatTokens(detail.rawMaxTokens)} tokens ({detail.percentage}%)
+        </Text>
+        {rows.map(row => (
+          <Box flexDirection="row" justifyContent="space-between">
+            <Text dimColor={row.kind !== 'used'}>{row.name}</Text>
+            <Text dimColor>{formatTokens(row.tokens)}</Text>
+          </Box>
+        ))}
       </Box>
     )
   })

@@ -3,10 +3,10 @@
 Mod Claude Code : une bande au-dessus du prompt qui affiche
 
 ```
-$0.052 / $4.99 (0%/15%) 45.2k tokens     7m03s | 1h52m16s (63% | 18%)
+$0.052 / $4.99 (0%/15%) 45.2k tokens · ◔ 23%     7m03s | 1h52m16s (63% | 18%)
 ```
 
-- **À gauche** : coût du dernier message / coût de la session (part de la limite 5 h consommée par le dernier message / par la session), puis les tokens de la conversation
+- **À gauche** : coût du dernier message / coût de la session (part de la limite 5 h consommée par le dernier message / par la session), puis les tokens de la conversation et la part du contexte qu'ils occupent, derrière un rond qui se remplit (bleu, orange dès 50 %, rouge dès 80 %). Un clic sur ce % ouvre un panneau « Contexte » avec le détail par catégorie, comme `/context`
 - **À droite** : temps de travail de Claude | durée d'ouverture de la session (limite 5 h restante | limite hebdo restante)
 
 Les valeurs passent à l'orange puis au rouge au-delà des seuils définis dans `THRESHOLDS` (`hooks/register.tsx`).
